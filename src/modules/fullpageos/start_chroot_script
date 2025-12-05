@@ -36,6 +36,27 @@ apt-get autoremove -y
 #apt-get tools
 apt-get -y --force-yes install git screen checkinstall avahi-daemon libavahi-compat-libdnssd1 xterm xdotool vim expect feh pulseaudio
 
+# Install Pico TTS and configure speech-dispatcher
+apt-get install -y libttspico-utils speech-dispatcher
+
+# Enable Pico as the default speech-dispatcher module
+cat > /etc/speech-dispatcher/modules/pico-generic.conf <<'EOF'
+# Pico2wave speech-dispatcher module
+AddVoice "en" "male1" "en-US" "/usr/bin/pico2wave -l=en-US -w %wav %text"
+AddVoice "en" "male2" "en-GB" "/usr/bin/pico2wave -l=en-GB -w %wav %text"
+AddVoice "de" "male1" "de-DE" "/usr/bin/pico2wave -l=de-DE -w %wav %text"
+AddVoice "fr" "male1" "fr-FR" "/usr/bin/pico2wave -l=fr-FR -w %wav %text"
+AddVoice "it" "male1" "it-IT" "/usr/bin/pico2wave -l=it-IT -w %wav %text"
+AddVoice "es" "male1" "es-ES" "/usr/bin/pico2wave -l=es-ES -w %wav %text"
+EOF
+
+# Register the Pico module with speech-dispatcher
+echo 'AddModule "pico" "sd_generic" "pico-generic.conf"' >> /etc/speech-dispatcher/speechd.conf
+echo 'DefaultModule pico' >> /etc/speech-dispatcher/speechd.conf
+
+# Restart speech-dispatcher to apply changes
+systemctl enable speech-dispatcher
+
 if [ "$FULLPAGEOS_INCLUDE_CHROMIUM" == "yes" ]
 then
     apt-get install -y --force-yes chromium-browser
